@@ -22,10 +22,13 @@
 
 package com.nvidia.devtech;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 
 /**
  * A helper class used to aid native code reading files from the assets
@@ -36,6 +39,12 @@ import android.content.Context;
 public class NvAPKFileHelper {
     private Context context = null;
     private static NvAPKFileHelper instance = new NvAPKFileHelper();
+    private static final boolean logAssetFiles = false;
+
+    String[] apkFiles;
+    int apkCount = 0;
+    int myApkCount = 0;
+    boolean hasAPKFiles = false;
 
     public void setContext(Context context) {
         this.context = context;
@@ -45,7 +54,7 @@ public class NvAPKFileHelper {
         return instance;
     }
 
-    public class NvAPKFile {
+    public static class NvAPKFile {
         /**
          * The actual data bytes.
          */
@@ -65,7 +74,97 @@ public class NvAPKFileHelper {
         public InputStream is;
     }
 
+    private int findInAPKFiles(String filename) {
+        if (this.myApkCount == 0) {
+            return -1;
+        }
+        String mp3Test = filename + ".mp3";
+        for (int i = 0; i < this.apkFiles.length; i++) {
+            if (filename.compareToIgnoreCase(this.apkFiles[i]) == 0 || mp3Test.compareToIgnoreCase(this.apkFiles[i]) == 0) {
+                if (filename.compareTo(this.apkFiles[i]) != 0) {
+                    //
+                }
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    void AddAssetFile(String filename) {
+        String[] strArr = this.apkFiles;
+        int i = this.myApkCount;
+        this.myApkCount = i + 1;
+        strArr[i] = filename;
+    }
+
+    void getDirectoryListing(AssetManager assets, String dir, int listCount) {
+        try {
+            if (this.apkFiles == null && listCount > 0) {
+                this.apkFiles = new String[listCount];
+            }
+            String[] myFiles = assets.list(dir);
+            assert myFiles != null;
+            if (myFiles.length == 0) {
+                if (listCount > 0) {
+                    AddAssetFile(dir);
+                } else {
+                    this.apkCount++;
+                }
+            } else if (listCount == 0) {
+            }
+            for (String myFile : myFiles) {
+                if (myFile.indexOf(46) == -1) {
+                    String newFile = !dir.isEmpty() ? dir + "/" + myFile : myFile;
+                    getDirectoryListing(assets, newFile, listCount);
+                } else if (listCount > 0) {
+                    AddAssetFile(!dir.isEmpty() ? dir + "/" + myFile : myFile);
+                } else {
+                    this.apkCount++;
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("ERROR: getDirectoryListing " + ex.getMessage());
+        }
+    }
+
+    void GetAssetList() {
+        try {
+            InputStream is = this.context.getAssets().open("assetfile.txt");
+            BufferedReader r = new BufferedReader(new InputStreamReader(is));
+            int listCount = Integer.parseInt(r.readLine());
+            this.myApkCount = 0;
+            if (listCount > 0) {
+                this.apkFiles = new String[listCount];
+                while (true) {
+                    String line = r.readLine();
+                    if (line != null) {
+                        String[] strArr = this.apkFiles;
+                        int i = this.myApkCount;
+                        this.myApkCount = i + 1;
+                        strArr[i] = line;
+                    } else {
+                        return;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            AssetManager assets = this.context.getAssets();
+            getDirectoryListing(assets, "", 0);
+            getDirectoryListing(assets, "", this.apkCount);
+        }
+    }
+
     public NvAPKFile openFileAndroid(String filename) {
+        if (!this.hasAPKFiles) {
+            this.apkCount = 0;
+            this.apkFiles = null;
+            GetAssetList();
+            this.hasAPKFiles = true;
+        }
+        int apkIndex = findInAPKFiles(filename);
+        if (apkIndex == -1) {
+            return null;
+        }
         NvAPKFile ret = new NvAPKFile();
         ret.is = null;
         ret.length = 0;
@@ -73,7 +172,7 @@ public class NvAPKFileHelper {
         ret.bufferSize = 0;
 
         try {
-            ret.is = context.getAssets().open(filename);
+            ret.is = context.getAssets().open(this.apkFiles[apkIndex]);
             int size = ret.is.available();
             ret.length = size;
             ret.is.mark(1024 * 1024 * 256);
