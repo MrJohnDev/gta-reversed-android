@@ -54,26 +54,6 @@ public class NvAPKFileHelper {
         return instance;
     }
 
-    public static class NvAPKFile {
-        /**
-         * The actual data bytes.
-         */
-        public byte[] data;
-        public int bufferSize;
-        /**
-         * The length of the data.
-         */
-        public int length;
-        /**
-         * The length of the data.
-         */
-        public int position;
-        /**
-         * Stream used to push/pull data.
-         */
-        public InputStream is;
-    }
-
     private int findInAPKFiles(String filename) {
         if (this.myApkCount == 0) {
             return -1;
@@ -97,13 +77,12 @@ public class NvAPKFileHelper {
         strArr[i] = filename;
     }
 
-    void getDirectoryListing(AssetManager assets, String dir, int listCount) {
+    int getDirectoryListing(AssetManager assets, String dir, int listCount) {
         try {
             if (this.apkFiles == null && listCount > 0) {
                 this.apkFiles = new String[listCount];
             }
             String[] myFiles = assets.list(dir);
-            assert myFiles != null;
             if (myFiles.length == 0) {
                 if (listCount > 0) {
                     AddAssetFile(dir);
@@ -125,6 +104,7 @@ public class NvAPKFileHelper {
         } catch (Exception ex) {
             System.out.println("ERROR: getDirectoryListing " + ex.getMessage());
         }
+        return 0;
     }
 
     void GetAssetList() {

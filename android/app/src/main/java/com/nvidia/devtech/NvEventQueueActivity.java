@@ -181,6 +181,21 @@ public abstract class NvEventQueueActivity
         }
     }
 
+    public View GetMainView() {
+        return view;
+    }
+
+    public void nativeCrashed() {
+        System.err.println("nativeCrashed");
+        if (prefs != null) {
+            try {
+                System.err.println("saved game was:\n" + prefs.getString("savedGame", ""));
+            } catch (Exception e) {
+            }
+        }
+        new RuntimeException("crashed here (native trace should follow after the Java trace)").printStackTrace();
+    }
+
     /**
      * Helper class used to pass raw data around.
      */
@@ -387,7 +402,7 @@ public abstract class NvEventQueueActivity
                 mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
             NvAPKFileHelper.getInstance().setContext(this);
-            NvAPKFileHelper.NvAPKFile file = new NvAPKFileHelper.NvAPKFile();
+            NvAPKFile file = new NvAPKFile();
             file.is = null;
             try {
                 assetMgr = getAssets();
@@ -579,7 +594,7 @@ public abstract class NvEventQueueActivity
      */
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        boolean ret = super.onKeyDown(keyCode, event);
+        boolean ret = false;
         if (keyCode == KeyEvent.KEYCODE_VOLUME_UP || keyCode == KeyEvent.KEYCODE_VOLUME_DOWN) {
             return super.onKeyDown(keyCode, event);
         }
@@ -689,14 +704,17 @@ public abstract class NvEventQueueActivity
 
     public void DoResumeEvent() {
         if (!waitingForResume) {
-            new Thread(() -> {
-                waitingForResume = true;
-                while (cachedSurfaceHolder == null) {
-                    mSleep(1000L);
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    waitingForResume = true;
+                    while (cachedSurfaceHolder == null) {
+                        NvEventQueueActivity.this.mSleep(1000L);
+                    }
+                    waitingForResume = false;
+                    NvEventQueueActivity.this.resumeEvent();
+                    ResumeEventDone = true;
                 }
-                waitingForResume = false;
-                resumeEvent();
-                ResumeEventDone = true;
             }).start();
         }
     }
@@ -739,7 +757,8 @@ public abstract class NvEventQueueActivity
                 }
 
                 ranInit = true;
-                if (!supportPauseResume && !init(GetGLExtensions)) {
+                if (supportPauseResume) {
+                    init(GetGLExtensions);
                 }
 
                 System.out.println("surfaceCreated: w:" + surfaceWidth + ", h:" + surfaceHeight);
@@ -1110,7 +1129,7 @@ public abstract class NvEventQueueActivity
      */
     protected void destroyEGLSurface() {
         if (eglDisplay != null && eglSurface != null)
-            egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, eglContext);
+            egl.eglMakeCurrent(eglDisplay, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_SURFACE, EGL10.EGL_NO_CONTEXT);
         if (eglSurface != null)
             egl.eglDestroySurface(eglDisplay, eglSurface);
         eglSurface = null;
