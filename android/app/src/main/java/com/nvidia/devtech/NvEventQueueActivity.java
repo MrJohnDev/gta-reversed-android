@@ -78,36 +78,11 @@ import android.widget.LinearLayout;
 public abstract class NvEventQueueActivity
         extends Activity
         implements SensorEventListener {
-    protected Handler handler = null;
-
-    protected boolean paused = false;
-
-    protected boolean wantsMultitouch = false;
-
-    protected boolean supportPauseResume = false;
-
-    //accelerometer related
-    protected boolean wantsAccelerometer = false;
-    protected SensorManager mSensorManager = null;
-    protected int mSensorDelay = SensorManager.SENSOR_DELAY_GAME; //other options: SensorManager.SENSOR_DELAY_FASTEST, SensorManager.SENSOR_DELAY_NORMAL and SensorManager.SENSOR_DELAY_UI
-    protected Display display = null;
 
     private static final int EGL_RENDERABLE_TYPE = 0x3040;
     private static final int EGL_OPENGL_ES2_BIT = 0x0004;
     private static final int EGL_OPENGL_ES3_BIT = 0x0040;
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-    EGL10 egl = null;
-    GL11 gl = null;
-
-    private boolean ranInit = false;
-    protected EGLSurface eglSurface = null;
-    protected EGLDisplay eglDisplay = null;
-    protected EGLContext eglContext = null;
-    protected EGLConfig eglConfig = null;
-
-    protected SurfaceHolder cachedSurfaceHolder = null;
-    private int surfaceWidth = 0;
-    private int surfaceHeight = 0;
 
     protected SurfaceHolder holder;
     protected SurfaceHolder movieTextHolder;
@@ -117,7 +92,16 @@ public abstract class NvEventQueueActivity
     protected SurfaceHolder vidHolder;
     protected SurfaceView vidView;
     protected SurfaceView view;
+    
     public boolean isNativeApp = false;
+
+    public Handler handler = null;
+
+    public boolean paused = false;
+
+    protected boolean wantsMultitouch = false;
+
+    protected boolean supportPauseResume = true;
 
     protected boolean GetGLExtensions = false;
     protected boolean isFailedError = false;
@@ -141,6 +125,20 @@ public abstract class NvEventQueueActivity
     boolean InVideview = false;
     ViewGroup.LayoutParams myLayout = new ViewGroup.LayoutParams(-2, -2);
 
+    //accelerometer related
+    protected boolean wantsAccelerometer = false;
+    protected SensorManager mSensorManager = null;
+    protected int mSensorDelay = SensorManager.SENSOR_DELAY_GAME; //other options: SensorManager.SENSOR_DELAY_FASTEST, SensorManager.SENSOR_DELAY_NORMAL and SensorManager.SENSOR_DELAY_UI
+    protected Display display = null;
+
+    EGL10 egl = null;
+    protected GL11 gl = null;
+
+    private boolean ranInit = false;
+    protected EGLSurface eglSurface = null;
+    protected EGLDisplay eglDisplay = null;
+    protected EGLContext eglContext = null;
+    protected EGLConfig eglConfig = null;
 
     protected SurfaceView warView = null;
     protected boolean vidViewCreated = false;
@@ -157,6 +155,10 @@ public abstract class NvEventQueueActivity
     protected String glVendor = null;
     protected String glRenderer = null;
     protected String glVersion = null;
+
+    public SurfaceHolder cachedSurfaceHolder = null;
+    protected int surfaceWidth = 0;
+    protected int surfaceHeight = 0;
 
     protected boolean ResumeEventDone = false;
     protected boolean UseSubtitles = false;
