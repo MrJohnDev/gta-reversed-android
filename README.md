@@ -1,6 +1,6 @@
 ## GTA SA Reversed Android
 
-A project to reverse Grand Theft Auto San Andreas (2.10 Android) completely, and to rewrite and document every function.
+A project to reverse Grand Theft Auto San Andreas (2.10 Android) completely, and to rewrite nand document every function.
 
 ### Coding Guidelines 
 Before you start writing code, please make sure to read the [coding guidelines](docs/CodingGuidelines.MD) for this project.
